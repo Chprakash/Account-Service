@@ -7,7 +7,9 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import chandra.prakash.registration.dto.UserDTO;
-import chandra.prakash.registration.entity.User;
+import chandra.prakash.registration.dto.UserLoginDTO;
+import chandra.prakash.registration.entity.TUser;
+import chandra.prakash.registration.repository.RoleRepository;
 import chandra.prakash.registration.repository.UserRepository;
 import chandra.prakash.registration.service.UserService;
 
@@ -20,31 +22,33 @@ public class UserServiceImpl implements UserService{
 	@Autowired
 	private BCryptPasswordEncoder bCryptPasswordEncoder;
 	
-	private User userDTOToUser(UserDTO userDTO) {
-		User user = new User();
-		user.setId(userDTO.getId());
-		user.setFirstName(userDTO.getFirstName());
-		user.setLastName(userDTO.getLastName());
-		user.setEmailID(userDTO.getEmailID());
-		user.setPassword(userDTO.getPassword());
-		user.setStatus(userDTO.getStatus());
-		return user;
+	@Autowired
+	private RoleRepository roleRepository;
+	
+	private TUser DTOToEntity(UserDTO DTO) {
+		TUser entity = new TUser();
+		entity.setId(DTO.getId());
+		entity.setFirstName(DTO.getFirstName());
+		entity.setLastName(DTO.getLastName());
+		entity.setEmailID(DTO.getEmailID());
+		entity.setPassword(DTO.getPassword());
+		entity.setStatus(DTO.getStatus());
+		return entity;
 	}
 	
-	private UserDTO clientToClinetDTO(User user) {
-		UserDTO userDTO = new UserDTO();
-		userDTO.setId(user.getId());
-		userDTO.setFirstName(user.getFirstName());
-		userDTO.setLastName(user.getLastName());
-		userDTO.setEmailID(user.getEmailID());
-		userDTO.setPassword(user.getPassword());
-		userDTO.setStatus(user.getStatus());
-		return userDTO;
+	private UserDTO EntityToDTO(TUser entity) {
+		UserDTO DTO = new UserDTO();
+		DTO.setId(entity.getId());
+		DTO.setFirstName(entity.getFirstName());
+		DTO.setLastName(entity.getLastName());
+		DTO.setEmailID(entity.getEmailID());
+		DTO.setStatus(entity.getStatus());
+		return DTO;
 	}
 
 	@Override
 	public UserDTO getUserByID(Long id) {
-		User user = userRepository.getOne(id);
+		TUser user = userRepository.getOne(id);
 		System.out.println(bCryptPasswordEncoder.encode(user.getPassword()));
 		UserDTO userDTO = new UserDTO();
 		userDTO.setId(user.getId());
@@ -54,11 +58,12 @@ public class UserServiceImpl implements UserService{
 
 	@Override
 	public UserDTO addNewUser(UserDTO userDTO) {
-		User user = userDTOToUser(userDTO);
+		TUser user = DTOToEntity(userDTO);
 		user.setPassword(bCryptPasswordEncoder.encode(user.getPassword()));
 		user.setCreatedDate(new Date());
 		user.setUpdatedDate(new Date());
-		userDTO = clientToClinetDTO(userRepository.save(user));
+		user.setRole(roleRepository.getOne(userDTO.getRole()));
+		userDTO = EntityToDTO(userRepository.save(user));
 		if(userDTO != null) {
 			userDTO.setPassword("");
 		}
@@ -67,21 +72,22 @@ public class UserServiceImpl implements UserService{
 	
 
 	@Override
-	public UserDTO getUserLogin(UserDTO userDTO) {
+	public UserDTO getUserLogin(UserLoginDTO userLoginDTO) {
 		Boolean validUser = false;
-		User user = userRepository.getUserByEmailID(userDTO.getEmailID());
+		UserDTO userDTO = null;
+		TUser user = userRepository.getUserByEmailID(userLoginDTO.getEmailID());
 		if(user != null) {
-			validUser = bCryptPasswordEncoder.matches(userDTO.getPassword(), user.getPassword());
+			validUser = bCryptPasswordEncoder.matches(userLoginDTO.getPassword(), user.getPassword());
+			if(validUser) {
+				userDTO = EntityToDTO(user);
+			}
 		}
-		userDTO = clientToClinetDTO(user);
-		if(userDTO != null) {
-			userDTO.setPassword("");
-		}
+		
 		return userDTO;
 	}
 
 	@Override
-	public User getUserByEmailID(String emailID) {
+	public TUser getUserByEmailID(String emailID) {
 		return userRepository.getUserByEmailID(emailID);
 	}
 

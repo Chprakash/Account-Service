@@ -17,6 +17,12 @@ public class MasterEntity implements Serializable{
 	private Date createdDate;
 	private Date updatedDate;
 	
+	
+	public MasterEntity() {
+		super();
+		// TODO Auto-generated constructor stub
+	}
+	
 	@Column(name = "status")
 	public Boolean getStatus() {
 		return status;

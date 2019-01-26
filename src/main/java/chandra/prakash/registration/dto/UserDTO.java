@@ -18,6 +18,8 @@ public class UserDTO implements Serializable{
 	private String password;
 	@NotNull
 	private Boolean status;
+	@NotNull
+	private Long role;
 	
 	public Long getId() {
 		return id;
@@ -55,4 +57,11 @@ public class UserDTO implements Serializable{
 	public void setStatus(Boolean status) {
 		this.status = status;
 	}
+	public Long getRole() {
+		return role;
+	}
+	public void setRole(Long role) {
+		this.role = role;
+	}
+	
 }
